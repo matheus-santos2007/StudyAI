@@ -2,7 +2,8 @@ const aiPrompt = document.getElementById("aiPrompt");
 const askAI = document.getElementById("askAI");
 const aiResponse = document.getElementById("aiResponse");
 
-const API_KEY = process.env.GROQ_API_KEY;;
+const groqMeta = document.querySelector('meta[name="groq-api-key"]');
+const GROQ_API_KEY = (groqMeta && groqMeta.content && groqMeta.content.trim()) || window.GROQ_API_KEY || "";
 
 askAI.addEventListener("click", askGroq);
 
@@ -11,6 +12,11 @@ async function askGroq() {
 
     if (!prompt) {
         alert("Digite uma pergunta!");
+        return;
+    }
+
+    if (!GROQ_API_KEY) {
+        aiResponse.innerHTML = "Chave Groq não configurada. Verifique a configuração no HTML ou no backend.";
         return;
     }
 
@@ -57,6 +63,11 @@ Explique diretamente sobre: ${prompt}
 
         const data = await response.json();
         console.log("Groq:", data);
+
+        if (!response.ok) {
+            const serverError = (data && data.error && data.error.message) || (data && data.message) || response.statusText;
+            throw new Error(serverError || "Erro desconhecido na API Groq");
+        }
 
         let answer = "Erro ao gerar resposta";
 
